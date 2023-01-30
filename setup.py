@@ -3,10 +3,9 @@ import setuptools
 setuptools.setup(
     name='srcsep',
     version='1.0',
-    author='Lorenzo and Ali',
-    author_email='',
-    description=
-    '',
+    author='Ali Siahkoohi and Lorenzo Baldassari',
+    author_email='alisk@rice.edu',
+    description='Karhunen-Loève Expansion in PyTorch',
     long_description_content_type='text/markdown',
     url='',
     license='MIT',
