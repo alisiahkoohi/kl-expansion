@@ -1,2 +1,1 @@
-from .kernels import *
-from .covariance import *
+from .kl_expansion import *
