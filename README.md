@@ -1,4 +1,4 @@
-<h1 align="center">Karhunen-Loève expansion in PyTorch</h1>
+<h1 align="center">Karhunen-Loève expansion</h1>
 
 ## Installation
 

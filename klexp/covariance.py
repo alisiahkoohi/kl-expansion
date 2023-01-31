@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from tqdm import tqdm
 
 from .kernels import rbf
 
@@ -18,10 +19,10 @@ def compute_covariance_matrix(x, kernel=rbf):
         A tensor of shape (s, s) containing the covariance matrix.
     """
     s = x.shape[0]
-    cov = torch.zeros(s, s)
-    for i in range(s):
+    cov = np.zeros([s, s])
+    for i in tqdm(range(s)):
         for j in range(i, s):
-            cov[i, j] = kernel(x[i], x[j])
+            cov[i, j] = kernel(x[i, :], x[j, :])
             cov[j, i] = cov[i, j]
     return cov
 
@@ -43,4 +44,17 @@ def query_points(data):
         else:
             for coord in pair[0]:
                 x.add(tuple(coord))
-    return torch.tensor(list(x))
+    return np.array(list(x))
+
+def eigen_pairs(cov):
+    """Compute the eigenvalues and eigenvectors of a covariance matrix.
+
+    Args:
+        cov: A tensor of shape (s, s) containing the covariance matrix.
+
+    Returns:
+        A tuple of two tensors. The first tensor is a tensor of shape (s, ) of
+        eigenvalues. The second tensor is a tensor of shape (s, s) of
+        eigenvectors.
+    """
+    return np.linalg.eig(cov)
