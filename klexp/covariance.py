@@ -1,12 +1,19 @@
 import torch
+import numpy as np
 
-# Compute the covariance matrix using a given kernel function.
-def compute_covariance_matrix(kernel, x):
+from .kernels import rbf
+
+
+def compute_covariance_matrix(x, kernel=rbf):
     """Compute the covariance matrix using a given kernel function.
 
     Args:
         kernel: A kernel function that takes two vectors and returns a scalar.
-        x: A tensor of shape (s, d) containing n d-dimensional vectors.
+        This must be implemented as a torch function.
+
+        x: A tensor of shape (s, d) containing n d-dimensional vectors. This
+        must be implemented as a torch tensor.
+
     Returns:
         A tensor of shape (s, s) containing the covariance matrix.
     """
@@ -20,22 +27,20 @@ def compute_covariance_matrix(kernel, x):
 
 
 def query_points(data):
-    """Take data pairs as input and return union of coordinates.
+    """Take data pairs as input and return the union of coordinates.
 
     Args:
         data: A list of data points created toy_dataset.
 
     Returns:
-        An array of shape (s, d) containing the union of coordinates.
+        A torch tensor of shape (s, d) containing the union of coordinates.
     """
-    x = []
+    # Initialize coordinates as a set to ensure uniqueness.
+    x = set()
     for pair in data:
-        x.append(np.array(pair[0]))
-
-    # Remove duplicates.
-    # TODO: This is a hack. Find a better way to do this.
-    L = {array.tobytes(): array for array in x}
-    
-    return np.array(list(L.values()))
-
-
+        if len(pair[0][0].shape) == 0:
+            x.update(pair[0])
+        else:
+            for coord in pair[0]:
+                x.add(tuple(coord))
+    return torch.tensor(list(x))

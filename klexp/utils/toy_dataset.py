@@ -20,12 +20,14 @@ def toy_dataset(n=200, s=100, d=1, x_range=(-10, 10), same_s=True):
     """
     data = []
     for i in range(n):
-        a = np.random.uniform(-1, 1, size=(d, ))
+        a = np.random.uniform(-1, 1, size=(d, )).astype(np.float32)
         eps = np.random.randn()
         if d == 1:
-            x = np.sort(np.random.uniform(*x_range, size=(s, )))
+            x = np.sort(np.random.uniform(*x_range,
+                                          size=(s, ))).astype(np.float32)
         else:
-            x = np.sort(np.random.uniform(*x_range, size=(s, d)))
+            x = np.sort(np.random.uniform(*x_range,
+                                          size=(s, d))).astype(np.float32)
         y = a * x**2 + eps
         data.append((x, y))
     return data
