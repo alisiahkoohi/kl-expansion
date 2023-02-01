@@ -7,7 +7,7 @@ N = 20
 S = 50
 D = 1
 X_RANGE = (-10, 10)
-EVAL_PATTERN = 'same_size'
+EVAL_PATTERN = 'same'
 
 if __name__ == "__main__":
     data = toy_dataset(n=N, s=S, d=D, x_range=X_RANGE, eval_pattern=EVAL_PATTERN)

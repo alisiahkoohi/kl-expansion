@@ -4,7 +4,7 @@ import numpy as np
 def inner_product(x, y):
     """Compute the inner product of two vectors.
     """
-    return np.dot(x, y)
+    return np.sum(x * y, axis=-1)
 
 
 def rbf(x, y, sigma=1.0):
