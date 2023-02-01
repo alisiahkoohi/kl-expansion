@@ -23,7 +23,8 @@ def toy_dataset(n=200, s=100, d=1, x_range=(-10, 10), eval_pattern='same'):
     data = []
 
     if eval_pattern == 'same':
-        x = np.random.uniform(*x_range, size=(s, d)).astype(np.float32)
+        # x = np.random.uniform(*x_range, size=(s, d)).astype(np.float32)
+        x = np.linspace(*x_range, s).repeat(d).reshape(s, d).astype(np.float32)
         for i in range(n):
             a = np.random.uniform(-1, 1, size=(d, )).astype(np.float32)
             eps = np.random.randn()

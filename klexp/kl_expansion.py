@@ -17,16 +17,25 @@ class KarhunenLoeveExpansion(object):
     
     Attributes:
         data: A list of data points created by toy_dataset.
-        M: Number of eigenvalues to compute.
+        M: Number of eigenvalues to use.
         kernel: A kernel function that takes two vectors and returns a scalar.
     """
-    def __init__(self, data, kernel=rbf):
+    def __init__(self, data, kernel=rbf, M=10):
         self.data = data
         self.x = self.query_points(data)
         self.S = len(self.x)
+        self.d = self.data[0][1].shape[1]
+        self.M = M
         self.kernel = kernel
+
+        if self.S < self.M:
+            raise ValueError('Number of points must be larger than number of '
+                             'eigenvalues.')
+
         self.kernel_matrix = self.get_kernel_matrix(self.x)
         self.eigen_val, self.eigen_vec = scipy.linalg.eigh(self.kernel_matrix)
+        self.eigen_val = self.eigen_val[::-1]
+        self.eigen_vec = self.eigen_vec[:, ::-1]
         self.eigen_fn = self.get_eigen_functions()
 
     def query_points(self, data):
@@ -60,19 +69,17 @@ class KarhunenLoeveExpansion(object):
         Returns:
             A numpy array of shape (s, s) containing the covariance matrix.
         """
-        s = x.shape[0]
-        cov = np.zeros([s, s], dtype=np.float32)
-        for j in range(s):
+        cov = np.zeros([self.S, self.S], dtype=np.float32)
+        for j in range(self.S):
             cov[:, j] = self.kernel(x, x[j, :])
-        return cov / s
+        return cov / self.S
 
     def get_eigen_functions(self):
         """Compute the eigenfunctions of the covariance matrix.
         """
         eigen_fns = []
+        for m in range(self.M):
 
-        for m in range(self.S):
-            # Define a lambda function to compute the eigenfunction.
             def fn(x, m=m):
                 val = 0.0
                 for s in range(self.S):
@@ -93,12 +100,12 @@ class KarhunenLoeveExpansion(object):
         """
         spectral_comps = []
 
-        Z = np.zeros([self.S, self.data[0][1].shape[1]], dtype=np.float32)
-        for m in range(self.S):
-            Z[m, :] = 1 / len(Y_x[0]) * np.sum(
-                Y_x[1] * self.eigen_val[m]**(-0.5) *
-                self.eigen_fn(Y_x[0])[m].reshape(-1, 1),
-                axis=0)
+        Z = np.zeros([self.M, self.d], dtype=np.float32)
+        for m in range(self.M):
+            Z[m, :] = 1 / len(
+                Y_x[0]) * np.sum(Y_x[1] * self.eigen_val[m]**(-0.5) *
+                                 self.eigen_fn(Y_x[0])[m].reshape(-1, 1),
+                                 axis=0)
         return Z
 
     def get_spectral_dataset(self):
@@ -109,4 +116,9 @@ class KarhunenLoeveExpansion(object):
 
     def fn_approx(self, Y_x):
         Z = self.get_spectral_component(Y_x)
-        return self.eigen_fn(Y_x[0]).T @ np.reshape(self.eigen_val**0.5, (-1, 1)) * Z
+        fn_val = np.zeros([len(Y_x[0]), self.d], dtype=np.float32)
+        eigen_fn_val = self.eigen_fn(Y_x[0])
+        for m in range(self.M):
+            fn_val += eigen_fn_val[m, :].reshape(
+                -1, 1) * Z[m, :] * self.eigen_val[m]**0.5
+        return fn_val
