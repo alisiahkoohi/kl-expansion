@@ -15,4 +15,9 @@ def parse_input_args(args):
     parser = argparse.ArgumentParser(description='')
     for key, value in args.items():
         parser.add_argument('--' + key, default=value, type=type(value))
-    return parser.parse_args()
+    parsed_args = parser.parse_args()
+    parsed_args.x_range = [
+        float(j) for j in parsed_args.x_range.replace('[', '').replace(
+            ']', '').replace(' ', '').split(',')
+    ]
+    return parsed_args

@@ -15,3 +15,18 @@ pip install -e .
 After the above steps, you can run the example scripts by just
 activating the environment, i.e., `conda activate klexp`, the
 following times.
+
+## Usage
+
+To run the example scripts, you can use the following commands.
+
+```bash
+python scripts/kl-expansion-toy-example.py --x_range [-10,10] --M 20
+```
+## Questions
+
+Please contact alisk@rice.edu for questions.
+
+## Author
+
+Ali Siahkoohi and Lorenzo Baldassari

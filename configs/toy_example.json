@@ -3,7 +3,7 @@
     "s": 100,
     "d": 1,
     "M": 20,
-    "x_range": "-10,10",
+    "x_range": "-10.0,10.0",
     "eval_pattern": "same",
     "seed": 12
 }

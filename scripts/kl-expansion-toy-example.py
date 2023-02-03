@@ -11,7 +11,6 @@ if __name__ == "__main__":
     # Command line arguments.
     args = read_config(os.path.join(configsdir(), CONFIG_FILE))
     args = parse_input_args(args)
-    args.x_range = [float(j) for j in args.x_range.replace(' ', '').split(',')]
 
     # Random seed.
     np.random.seed(args.seed)

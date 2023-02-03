@@ -36,6 +36,11 @@ class KarhunenLoeveExpansion(object):
         self.eigen_val, self.eigen_vec = scipy.linalg.eigh(self.kernel_matrix)
         self.eigen_val = self.eigen_val[::-1]
         self.eigen_vec = self.eigen_vec[:, ::-1]
+        if self.eigen_val[self.M] < 1e-7:
+            raise ValueError(
+                'Use smaller M. Eigenvalue number {} is equal to {}, '
+                'which may lead to large numerical errors.'.format(
+                    self.M, self.eigen_val[self.M]))
         self.eigen_fn = self.get_eigen_functions()
 
     def query_points(self, data):
