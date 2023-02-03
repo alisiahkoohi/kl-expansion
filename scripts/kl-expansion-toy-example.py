@@ -29,6 +29,17 @@ if __name__ == "__main__":
                             eval_pattern=args.eval_pattern)
 
     plt.figure(figsize=(6, 4), dpi=200)
+    eigen_fns = kl_exp.eigen_fn(test_data[0][0])
+    for i in range(0, args.M):
+        plt.plot(test_data[0][0],
+                 eigen_fns[i, :],
+                 linewidth=0.9,
+                 color=str(.8 * (1 - (args.M - i) / args.M)),
+                 alpha=0.8)
+    plt.title("Eigenfunctions")
+    plt.grid()
+
+    plt.figure(figsize=(6, 4), dpi=200)
     for i in range(5):
         fhat = kl_exp.fn_approx(test_data[i])
         plt.plot(test_data[i][0],

@@ -1,5 +1,24 @@
 <h1 align="center">Karhunen-Loève expansion</h1>
 
+
+Python implementation of the Karhunen-Loève expansion for approximating stochastic processes via a set of eigenfunctions. This is useful for separating the space-time components of stochastic processes from their stochastic components. The implementation is based on the following paper:
+
+```bibtex
+@inproceedings{
+phillips2022spectral,
+title={Spectral Diffusion Processes},
+author={Angus Phillips and Thomas Seror and Michael John Hutchinson 
+    and Valentin De Bortoli and Arnaud Doucet and Emile Mathieu},
+booktitle={NeurIPS 2022 Workshop on Score-Based Methods},
+year={2022},
+url={https://openreview.net/forum?id=bOmLb2i0W_h}
+}
+```
+
+![](plots/toy_example/eigenfunctions.png)
+![](plots/toy_example/kl_approximation.png)
+
+
 ## Installation
 
 Run the commands below to install the required packages.
