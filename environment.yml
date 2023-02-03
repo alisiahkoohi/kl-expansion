@@ -14,4 +14,5 @@ dependencies:
     - gitpython
     - h5py
     - seaborn
+    - mpire
     - pathlib

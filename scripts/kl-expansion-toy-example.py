@@ -20,7 +20,10 @@ if __name__ == "__main__":
                        d=args.d,
                        x_range=args.x_range,
                        eval_pattern=args.eval_pattern)
-    kl_exp = KarhunenLoeveExpansion(data, kernel=rbf, M=args.M)
+    kl_exp = KarhunenLoeveExpansion(data,
+                                    kernel=rbf,
+                                    M=args.M,
+                                    num_workers=args.num_workers)
 
     test_data = toy_dataset(n=5,
                             s=args.s,

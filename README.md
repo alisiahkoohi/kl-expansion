@@ -1,7 +1,11 @@
 <h1 align="center">Karhunen-Loève expansion</h1>
 
 
-Python implementation of the Karhunen-Loève expansion for approximating stochastic processes via a set of eigenfunctions. This is useful for separating the space-time components of stochastic processes from their stochastic components. The implementation is based on the following paper:
+Python implementation of the Karhunen-Loève expansion, with parallelism
+over the evaluation of the eigenfunctions, for approximating stochastic
+processes via a set of eigenfunctions. This is useful for separating the
+space-time components of stochastic processes from their stochastic
+components. The implementation is based on the following paper:
 
 ```bibtex
 @inproceedings{
@@ -40,7 +44,7 @@ following times.
 To run the example scripts, you can use the following commands.
 
 ```bash
-python scripts/kl-expansion-toy-example.py --x_range [-10,10] --M 20
+python scripts/kl-expansion-toy-example.py --x_range [-10,10] --M 20 --num_workers 8
 ```
 ## Questions
 

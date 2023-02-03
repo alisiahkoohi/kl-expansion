@@ -1,6 +1,5 @@
 import argparse
 import json
-import torch
 
 
 def read_config(filename):
