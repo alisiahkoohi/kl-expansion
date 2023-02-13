@@ -147,7 +147,7 @@ class KarhunenLoeveExpansion(object):
     def get_spectral_dataset(self):
         Z = []
         for i in range(len(self.data)):
-            Z.append(self.get_spectral_component(self.data[i][1])[0])
+            Z.append(self.get_spectral_component(self.data[i])[0])
         return Z
 
     def fn_approx(self, Y_x):
