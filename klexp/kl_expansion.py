@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 from mpire import WorkerPool
+from tqdm import tqdm
 
 from .kernels import rbf
 
@@ -41,7 +42,7 @@ class KarhunenLoeveExpansion(object):
                 'Use smaller M. Eigenvalue number {} is equal to {}, '
                 'which may lead to large numerical errors.'.format(
                     self.M, self.eigen_val[self.M]))
-        self.eigen_fn = self.get_eigen_functions()
+        self.eigen_fn = self.get_eigen_functions(num_workers > 1)
 
     def query_points(self, data):
         """Take data pairs as input and return the union of coordinates.
@@ -92,7 +93,7 @@ class KarhunenLoeveExpansion(object):
         covs = np.concatenate(covs, axis=0)[np.concatenate(idxs, axis=0), :]
         return covs / self.S
 
-    def get_eigen_functions(self):
+    def get_eigen_functions(self, parallel):
         """Compute the eigenfunctions of the covariance matrix.
         """
         eigen_fns = []
@@ -108,50 +109,105 @@ class KarhunenLoeveExpansion(object):
 
             eigen_fns.append(fn)
 
-        def eigen_fn(x, eigen_fns=eigen_fns):
+        if parallel:
+
+            def eigen_fn(x, eigen_fns=eigen_fns):
+                def serial_job(in_shared, idxs):
+                    x, eigen_fns = in_shared
+                    return idxs, [fn(x) for fn in eigen_fns[idxs]]
+
+                split_idxs = np.array_split(np.arange(self.M),
+                                            self.num_workers,
+                                            axis=0)
+                with WorkerPool(n_jobs=self.num_workers,
+                                shared_objects=(x, np.array(eigen_fns)),
+                                start_method='fork') as pool:
+                    outputs = pool.map(serial_job,
+                                       split_idxs,
+                                       progress_bar=False)
+
+                # Unpack the outputs.
+                (idxs, fn_evals) = zip(*outputs)
+                fn_evals = [fn_eval for fn_eval in fn_evals if fn_eval]
+                fn_evals = np.concatenate(
+                    fn_evals, axis=0)[np.concatenate(idxs, axis=0), :]
+                return fn_evals
+
+            return eigen_fn
+
+        else:
+
+            def eigen_fn(x, eigen_fns=eigen_fns):
+                return np.array([fn(x) for fn in eigen_fns])
+
+            return eigen_fn
+
+    def get_spectral_component(self, Y_x, parallel):
+        """Compute the spectral component of the KL expansion.
+        """
+        spectral_comps = []
+        eigen_fn_val = self.eigen_fn(Y_x[0])
+
+        if parallel:
+
             def serial_job(in_shared, idxs):
-                x, eigen_fns = in_shared
-                return idxs, [fn(x) for fn in eigen_fns[idxs]]
+                eigen_fn_val, Y_x = in_shared
+                Z = np.zeros([len(idxs), self.d], dtype=np.float32)
+                for m, idx in enumerate(idxs):
+                    Z[m, :] = 1 / len(
+                        Y_x[0]) * np.sum(Y_x[1] * self.eigen_val[idx]**(-0.5) *
+                                         eigen_fn_val[idx].reshape(-1, 1),
+                                         axis=0)
+                return idxs, Z
 
             split_idxs = np.array_split(np.arange(self.M),
                                         self.num_workers,
                                         axis=0)
+
             with WorkerPool(n_jobs=self.num_workers,
-                            shared_objects=(x, np.array(eigen_fns)),
+                            shared_objects=(eigen_fn_val, Y_x),
                             start_method='fork') as pool:
                 outputs = pool.map(serial_job, split_idxs, progress_bar=False)
 
             # Unpack the outputs.
-            (idxs, fn_evals) = zip(*outputs)
-            fn_evals = [fn_eval for fn_eval in fn_evals if fn_eval]
-            fn_evals = np.concatenate(fn_evals,
-                                      axis=0)[np.concatenate(idxs, axis=0), :]
-            return fn_evals
+            (idxs, Z) = zip(*outputs)
+            Z = np.concatenate(Z, axis=0)[np.concatenate(idxs, axis=0), :]
 
-        return eigen_fn
+        else:
+            Z = np.zeros([self.M, self.d], dtype=np.float32)
+            for m in range(self.M):
+                Z[m, :] = 1 / len(
+                    Y_x[0]) * np.sum(Y_x[1] * self.eigen_val[m]**(-0.5) *
+                                     eigen_fn_val[m].reshape(-1, 1),
+                                     axis=0)
 
-    def get_spectral_component(self, Y_x):
-        """Compute the spectral component of the KL expansion.
-        """
-        spectral_comps = []
-
-        Z = np.zeros([self.M, self.d], dtype=np.float32)
-        eigen_fn_val = self.eigen_fn(Y_x[0])
-        for m in range(self.M):
-            Z[m, :] = 1 / len(
-                Y_x[0]) * np.sum(Y_x[1] * self.eigen_val[m]**(-0.5) *
-                                 eigen_fn_val[m].reshape(-1, 1),
-                                 axis=0)
         return Z, eigen_fn_val
 
-    def get_spectral_dataset(self):
-        Z = []
-        for i in range(len(self.data)):
-            Z.append(self.get_spectral_component(self.data[i])[0])
+    def get_spectral_dataset(self, num_workers=8):
+        if num_workers > 1 and self.num_workers > 1:
+            raise ValueError('daemonic processes are not allowed to have '
+                             'children.')
+
+        def serial_job(idxs):
+            Z = []
+            for idx in idxs:
+                Z.append(self.get_spectral_component(self.data[idx], False)[0])
+            return idxs, Z
+
+        split_idxs = np.array_split(np.arange(len(self.data)),
+                                    num_workers,
+                                    axis=0)
+        print('Creating spectral dataset...')
+        with WorkerPool(n_jobs=num_workers, start_method='fork') as pool:
+            outputs = pool.map(serial_job, split_idxs, progress_bar=False)
+
+        # Unpack the outputs.
+        (idxs, Z) = zip(*outputs)
+        Z = np.concatenate(Z, axis=0)[np.concatenate(idxs, axis=0), :]
         return Z
 
     def fn_approx(self, Y_x):
-        Z, eigen_fn_val = self.get_spectral_component(Y_x)
+        Z, eigen_fn_val = self.get_spectral_component(Y_x, True)
         fn_val = np.zeros([len(Y_x[0]), self.d], dtype=np.float32)
         for m in range(self.M):
             fn_val += eigen_fn_val[m, :].reshape(
