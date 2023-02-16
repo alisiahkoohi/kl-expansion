@@ -26,14 +26,15 @@ def toy_dataset(n=200, s=100, d=1, x_range=(-10, 10), eval_pattern='same'):
         # x = np.random.uniform(*x_range, size=(s, d)).astype(np.float32)
         x = np.linspace(*x_range, s).repeat(d).reshape(s, d).astype(np.float32)
         for i in range(n):
-            a = np.random.uniform(-1, 1, size=(d, )).astype(np.float32)
+            # a = np.random.uniform(-1, 1, size=(d, )).astype(np.float32)
+            a = np.random.choice([-1.0, 1.0]).astype(np.float32)
             eps = np.random.randn()
             y = a * x**2 + eps
             data.append((x, y))
 
     if eval_pattern == 'same_size':
         for i in range(n):
-            a = np.random.uniform(-1, 1, size=(d, )).astype(np.float32)
+            a = np.random.choice([-1.0, 1.0]).astype(np.float32)
             eps = np.random.randn()
             x = np.random.uniform(*x_range, size=(s, d)).astype(np.float32)
             y = a * x**2 + eps
@@ -41,7 +42,7 @@ def toy_dataset(n=200, s=100, d=1, x_range=(-10, 10), eval_pattern='same'):
 
     if eval_pattern == 'random':
         for i in range(n):
-            a = np.random.uniform(-1, 1, size=(d, )).astype(np.float32)
+            a = np.random.choice([-1.0, 1.0]).astype(np.float32)
             eps = np.random.randn()
             x = np.random.uniform(*x_range, size=(np.random.randint(s),
                                                   d)).astype(np.float32)
